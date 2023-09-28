@@ -2,32 +2,66 @@ import { useRef } from "react";
 
 import "./app.scss";
 
-function draw(ctx, example) {
-    example.width = 640; //  изменили размер холста чтобы
-    example.height = 480; // изображение полностью отобразилось
+//отрисовка всего
+const draw = (ctx, example) => {
+    example.width = 800; //  изменили размер холста чтобы
+    example.height = 700; // изображение полностью отобразилось
 
-    // Задаем координаты четырех точек
-    var point1 = { x: 0, y: 0 };
-    var point2 = { x: 0, y: 100 };
-    var point3 = { x: 150, y: 50 };
-    var point4 = { x: 100, y: 0 };
-
-    // Создаем массив точек многоугольника
-    var points = [point1, point2, point3, point4];
-    // Начинаем рисование
-    ctx.beginPath();
-    // Перемещаем к первой точке
-    ctx.moveTo(points[0].x, points[0].y);
-    // Рисуем линии к остальным точкам
-    for (var i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
+    const dwarf = {
+        BF: {
+            type: "BF",
+            points: [
+                { x: 350, y: 300 }, //левый верх
+                { x: 350, y: 400 }, //левый низ
+                { x: 450, y: 400 }, //правый низ
+                { x: 450, y: 300 }, //левый вер
+            ],
+        },
+        LHF: {
+            type: "LHF",
+            points: [
+                { x: 275, y: 300 }, //левый верх
+                { x: 275, y: 335 }, //левый низ
+                { x: 350, y: 335 }, //правый низ
+                { x: 350, y: 300 }, //левый вер
+            ],
+        },
+        RHF: {
+            type: "RHF",
+            points: [
+                { x: 450, y: 300 }, //левый верх
+                { x: 450, y: 335 }, //левый низ
+                { x: 525, y: 335 }, //правый низ
+                { x: 525, y: 300 }, //левый вер
+            ],
+        },
+        FF: {
+            type: "FF",
+            points: [
+                { x: 350, y: 225 }, //левый верх
+                { x: 350, y: 300 }, //левый низ
+                { x: 450, y: 300 }, //правый низ
+                { x: 450, y: 225 }, //левый вер
+            ],
+        },
+    };
+    for (let bodyPart in dwarf) {
+        drawBodyPart(ctx, dwarf[bodyPart]);
     }
-    // Заканчиваем рисование
+};
+
+//отрисовка части тела
+const drawBodyPart = (ctx, bodyPart) => {
+    ctx.beginPath();
+    ctx.moveTo(bodyPart.points[0].x, bodyPart.points[0].y);
+    for (let i = 1; i < bodyPart.points.length; i++) {
+        ctx.lineTo(bodyPart.points[i].x, bodyPart.points[i].y);
+    }
     ctx.closePath();
-    // Заливаем многоугольник цветом
-    ctx.fillStyle = "red";
-    ctx.fill();
-}
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+};
 
 const App = () => {
     const canvasRef = useRef(null);
