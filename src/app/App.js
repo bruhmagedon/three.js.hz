@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
+
 import "./app.scss";
 
 function draw(ctx, example) {
@@ -24,9 +25,10 @@ function draw(ctx, example) {
     // Заканчиваем рисование
     ctx.closePath();
     // Заливаем многоугольник цветом
-    // ctx.fillStyle = "red";
+    ctx.fillStyle = "red";
     ctx.fill();
 }
+
 const App = () => {
     const canvasRef = useRef(null);
 
@@ -44,4 +46,5 @@ const App = () => {
         </div>
     );
 };
+
 export default App;
