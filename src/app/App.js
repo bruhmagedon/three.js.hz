@@ -1,223 +1,235 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+import { multiply } from "mathjs";
+import { Service } from "../service/graphic-service";
 
 import "./app.scss";
 
-//отрисовка всего
-const draw = (ctx, example) => {
-    example.width = 800; //  изменили размер холста чтобы
-    example.height = 700; // изображение полностью отобразилось
-
-    const dwarf = {
-        BF: {
-            type: "BF",
-            points: [
-                { x: 350, y: 300 }, //левый верх
-                { x: 350, y: 400 }, //левый низ
-                { x: 450, y: 400 }, //правый низ
-                { x: 450, y: 300 }, //левый вер
-            ],
-        },
-        LHF: {
-            type: "LHF",
-            points: [
-                { x: 275, y: 300 }, //левый верх
-                { x: 275, y: 335 }, //левый низ
-                { x: 350, y: 335 }, //правый низ
-                { x: 350, y: 300 }, //левый вер
-            ],
-        },
-        RHF: {
-            type: "RHF",
-            points: [
-                { x: 450, y: 300 }, //левый верх
-                { x: 450, y: 335 }, //левый низ
-                { x: 525, y: 335 }, //правый низ
-                { x: 525, y: 300 }, //левый вер
-            ],
-        },
-        FF: {
-            type: "FF",
-            points: [
-                { x: 350, y: 225 }, //левый верх
-                { x: 350, y: 300 }, //левый низ
-                { x: 450, y: 300 }, //правый низ
-                { x: 450, y: 225 }, //левый вер
-            ],
-        },
-        HF: {
-            type: "HF",
-            points: [
-                { x: 400, y: 125 }, //левый верх
-                { x: 350, y: 225 }, //левый низ
-                { x: 450, y: 225 }, //левый вер
-            ],
-        },
-        LLF: {
-            type: "LLF",
-            points: [
-                { x: 350, y: 400 }, //левый верх
-                { x: 350, y: 475 }, //левый низ
-                { x: 390, y: 475 }, //левый вер
-                { x: 390, y: 400 }, //левый вер 18
-            ],
-        },
-        RLF: {
-            type: "RLF",
-            points: [
-                { x: 410, y: 400 }, //левый верх 19
-                { x: 410, y: 475 }, //левый низ
-                { x: 450, y: 475 }, //левый вер
-                { x: 450, y: 400 }, //левый вер
-            ],
-        },
-        E1: {
-            type: "E1",
-            points: [
-                { x: 365, y: 240 }, //левый верх
-                { x: 365, y: 260 }, //левый низ
-                { x: 385, y: 260 }, //левый вер
-                { x: 385, y: 240 }, //левый вер
-            ],
-        },
-        E2: {
-            type: "E2",
-            points: [
-                { x: 415, y: 240 }, //левый верх
-                { x: 415, y: 260 }, //левый низ
-                { x: 435, y: 260 }, //левый вер
-                { x: 435, y: 240 }, //левый вер
-            ],
-        },
-        M: {
-            type: "M",
-            points: [
-                { x: 365, y: 270 }, //левый верх
-                { x: 365, y: 290 }, //левый низ
-                { x: 435, y: 290 }, //левый вер
-                { x: 435, y: 270 }, //левый вер
-            ],
-        },
-    };
-    for (let bodyPart in dwarf) {
-        drawBodyPart(ctx, dwarf[bodyPart]);
-        drawBodyPart(ctx, dwarf[bodyPart]);
-    }
-
-    scaling(dwarf["BF"]);
-
-    // Определяем объект для масштабирования
-    // var object = {
-    //     x: 100, // начальная координата x
-    //     y: 100, // начальная координата y
-    //     width: 100, // ширина объекта
-    //     height: 100, // высота объекта
-    // };
-
-    // // Определяем матрицу масштабирования
-    // var scaleMatrix = [
-    //     [3, 0, 0], // масштаб по оси x
-    //     [0, 3, 0], // масштаб по оси y
-    //     [0, 0, 1], // не изменяем z координату
-    // ];
-
-    // // Функция для умножения матриц
-
-    // // Функция для применения матрицы масштабирования к объекту
-    // function applyTransformation() {
-    //     console.log("obj", object);
-    //     var transformedMatrix = multiplyMatrix(scaleMatrix, [
-    //         [object.x],
-    //         [object.y],
-    //         [1],
-    //     ]);
-
-    //     console.log("transmatrix", transformedMatrix);
-
-    //     object.x = transformedMatrix[0][0];
-    //     object.y = transformedMatrix[1][0];
-    //     object.width *= scaleMatrix[0][0];
-    //     object.height *= scaleMatrix[1][1];
-    //     console.log("obj2", object);
-    // }
-
-    // // Масштабируем объект
-    // applyTransformation();
-
-    // // Рисуем объект
-    // ctx.fillStyle = "#FF0000"; // красный цвет заливки
-    // ctx.fillRect(object.x, object.y, object.width, object.height);
-};
-
-const scaling = (bodyPart) => {
-    const partMatrix = [];
-    for (let part of bodyPart.points) {
-        const localPart = [part.x, part.y];
-        partMatrix.push(localPart);
-    }
-
-    console.log(partMatrix);
-    const scale = [
-        [2, 0, 0],
-        [0, 2, 0],
-        [0, 0, 1],
-    ];
-    multiplyMatrix(scale, partMatrix);
-    console.log(partMatrix);
-};
-
-function multiplyMatrix(matrix1, matrix2) {
-    console.log("multiply", matrix1, matrix2);
-    var resultMatrix = [];
-
-    for (var i = 0; i < matrix1.length; i++) {
-        var row = [];
-
-        for (var j = 0; j < matrix2[0].length; j++) {
-            var sum = 0;
-
-            for (var k = 0; k < matrix1[0].length; k++) {
-                sum += matrix1[i][k] * matrix2[k][j];
-            }
-
-            row.push(sum);
-        }
-
-        resultMatrix.push(row);
-    }
-
-    return resultMatrix;
-}
-
-//отрисовка части тела
-const drawBodyPart = (ctx, bodyPart) => {
-    ctx.beginPath();
-    ctx.moveTo(bodyPart.points[0].x, bodyPart.points[0].y);
-    for (let i = 1; i < bodyPart.points.length; i++) {
-        ctx.lineTo(bodyPart.points[i].x, bodyPart.points[i].y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-};
-
 const App = () => {
+    const x = 0;
+    const y = 1;
+    // ссылка на полотно
     const canvasRef = useRef(null);
 
+    //импорт сервисных функций из сервисного компонента
+    const { convertModelToMatrix, drawDwarf, coordConvert, saveProps } =
+        Service();
+
+    // оригинальный гном в мировых координатах (+его матрица)
+    const [dwarf, setDwarf] = useState(null);
+    const [dwarfMatrix, setDwarfMatrix] = useState(null);
+    const [statusDraw, setStatusDraw] = useState(false);
+
+    // первая загрузка страницы (начальные параметры)
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        saveProps(ctx, canvas);
+
+        //начальная моделька
+        const localDwarf = {
+            BF: {
+                type: "BF",
+                points: [
+                    { x: -3, y: 0 },
+                    { x: -3, y: 4 },
+                    { x: 3, y: 4 },
+                    { x: 3, y: 0 },
+                ],
+            },
+            LHF: {
+                type: "LHF",
+                points: [
+                    { x: -6, y: 0 },
+                    { x: -6, y: 2 },
+                    { x: -3, y: 2 },
+                    { x: -3, y: 0 },
+                ],
+            },
+            RHF: {
+                type: "RHF",
+                points: [
+                    { x: 6, y: 0 },
+                    { x: 6, y: 2 },
+                    { x: 3, y: 2 },
+                    { x: 3, y: 0 },
+                ],
+            },
+            FF: {
+                type: "FF",
+                points: [
+                    { x: -3, y: -4 },
+                    { x: -3, y: 0 },
+                    { x: 3, y: 0 },
+                    { x: 3, y: -4 },
+                ],
+            },
+            HF: {
+                type: "HF",
+                points: [
+                    { x: -3, y: -4 },
+                    { x: 3, y: -4 },
+                    { x: 0, y: -10 },
+                ],
+            },
+            LLF: {
+                type: "LLF",
+                points: [
+                    { x: -3, y: 4 },
+                    { x: -3, y: 8 },
+                    { x: -1, y: 8 },
+                    { x: -1, y: 4 },
+                ],
+            },
+            RLF: {
+                type: "RLF",
+                points: [
+                    { x: 1, y: 4 },
+                    { x: 1, y: 8 },
+                    { x: 3, y: 8 },
+                    { x: 3, y: 4 },
+                ],
+            },
+            E1: {
+                type: "E1",
+                points: [
+                    { x: -2, y: -3 },
+                    { x: -2, y: -2 },
+                    { x: -1, y: -2 },
+                    { x: -1, y: -3 },
+                ],
+            },
+            E2: {
+                type: "E2",
+                points: [
+                    { x: 1, y: -3 },
+                    { x: 1, y: -2 },
+                    { x: 2, y: -2 },
+                    { x: 2, y: -3 },
+                ],
+            },
+            M: {
+                type: "M",
+                points: [
+                    { x: -2, y: -1 },
+                    { x: -2, y: 0 },
+                    { x: 2, y: 0 },
+                    { x: 2, y: -1 },
+                ],
+            },
+        };
+        setDwarf(localDwarf); //установка начальной модельки
+        setDwarfMatrix(convertModelToMatrix(localDwarf)); //создание матрицы координат
+        // eslint-disable-next-line
+    }, []);
+
+    //отрисовка
+    const draw = () => {
+        setStatusDraw(true);
+        const screenDwarf = coordConvert(dwarfMatrix, 10); // из мировых в экранные
+        drawDwarf(screenDwarf, dwarf);
+    };
+
+    //масштабирование
+    const onScale = (scale) => {
+        if (!statusDraw) return;
+
+        const scaleMatrix = [
+            // матрица маштабирования
+            [scale, 0, 0],
+            [0, scale, 0],
+            [0, 0, 1],
+        ];
+
+        const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
+        const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
+        drawDwarf(screenDwarf, dwarf);
+    };
+
+    const onMove = (scale) => {
+        if (!statusDraw) return;
+
+        const moveDwarf = structuredClone(dwarfMatrix);
+        for (const bodyPart in moveDwarf) {
+            moveDwarf[bodyPart][x] += 0;
+            moveDwarf[bodyPart][y] += 10;
+        }
+        //переводим из мировых в экранные
+        const screenDwarf = coordConvert(moveDwarf, 10);
+        drawDwarf(screenDwarf, dwarf);
+    };
+
+    const onRotate = (scale) => {
+        if (!statusDraw) return;
+
+        // Рассчитываем угол поворота в радианах
+        let angle = 45;
+        let radianAngle = (angle * Math.PI) / 180;
+
+        // Создаем матрицу поворота
+        let rotationMatrix = [
+            [Math.cos(radianAngle), -Math.sin(radianAngle), 0],
+            [Math.sin(radianAngle), Math.cos(radianAngle), 0],
+            [0, 0, 1],
+        ];
+
+        const rotateMatrixDwarf = structuredClone(dwarfMatrix);
+        const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
+
+        // for (const bodyPart in moveDwarf) {
+        //     moveDwarf[bodyPart][x] += 0;
+        //     moveDwarf[bodyPart][y] += 10;
+        // }
+        // //переводим из мировых в экранные
+        const screenDwarf = coordConvert(rotateDwarf, 10);
+        drawDwarf(screenDwarf, dwarf);
+    };
+
     return (
-        <div className="container">
-            <canvas
-                ref={canvasRef} //ссылка на элемент
-                className="canvas"
-                onClick={(e) => {
-                    const canvas = canvasRef.current; //использование ссылки
-                    const ctx = canvas.getContext("2d");
-                    draw(ctx, canvas);
-                }}
-            ></canvas>
-            <button type="button" />
-        </div>
+        <>
+            <div className="container">
+                <aside className="buttons-panel">
+                    <nav className="buttons-panel-navigate">
+                        <button
+                            className="buttons-panel-button"
+                            onClick={onRotate}
+                        >
+                            Повернуть
+                        </button>
+                        <button
+                            className="buttons-panel-button"
+                            onClick={(e) => onMove(5)}
+                        >
+                            Переместить
+                        </button>
+                    </nav>
+                </aside>
+                <canvas
+                    width={800}
+                    height={800}
+                    ref={canvasRef} //ссылка на элемент
+                    className="canvas"
+                ></canvas>
+                <aside className="buttons-panel">
+                    <nav className="buttons-panel-navigate">
+                        <button className="buttons-panel-button" onClick={draw}>
+                            Отрисовать
+                        </button>
+                        <button
+                            className="buttons-panel-button"
+                            // скейл будем брать из инпута (два инпута по x и y)
+                            onClick={(e) => onScale(3)}
+                        >
+                            Масшабировать
+                        </button>
+                    </nav>
+                </aside>
+            </div>
+        </>
     );
 };
 
 export default App;
+
+//* Вместо инпутов можно перемещать по нажатию стрелочек
+//* Поворачивать с помощью какой нибудь крутилки
+//* А увеличивать с помощью ползунка
