@@ -18,6 +18,11 @@ body {
     min-width: 100vw;
     display: flex;
     justify-content: center;
+    &-scale {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
 }
 
 .buttons-panel {
@@ -39,13 +44,24 @@ body {
         border-radius: 5px;
         padding: 3px 7px;
         transition: all 0.3s ease;
-        width: 162px;
+        width: 100%;
         height: 37px;
         &:hover {
             background: #d8dadb;
             color: black;
         }
     }
+}
+
+.range-scale-container {
+    display: none;
+}
+
+.range {
+    box-sizing: border-box;
+    margin: 10px;
+    width: 163px;
+    margin-left: 2px;
 }
 
 .canvas {

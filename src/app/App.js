@@ -1,23 +1,34 @@
 import { useRef, useState, useEffect } from "react";
 import { multiply } from "mathjs";
 import { Service } from "../service/graphic-service";
-
+import { useCoordinate } from "../service/coordinate.hook";
+import { useModel } from "../model/model";
+import { Range } from "../range/Range";
 import "./app.scss";
 
 const App = () => {
-    const x = 0;
-    const y = 1;
     // ссылка на полотно
     const canvasRef = useRef(null);
+    const scaleRangeRef = useRef(null);
 
-    //импорт сервисных функций из сервисного компонента
+    //импорт сервисных функций
     const { convertModelToMatrix, drawDwarf, coordConvert, saveProps } =
         Service();
+
+    // импорт хука для работы с координатами
+    const { x, y, scaleCoordinate } = useCoordinate();
+
+    // импорт модельки гнома
+    const { dwarfModel } = useModel();
 
     // оригинальный гном в мировых координатах (+его матрица)
     const [dwarf, setDwarf] = useState(null);
     const [dwarfMatrix, setDwarfMatrix] = useState(null);
     const [statusDraw, setStatusDraw] = useState(false);
+
+    // панели активности
+    const [srangeDisplay, setSrangeDisplay] = useState(false);
+    const [srotateDisplay, setRotateDisplay] = useState(false);
 
     // первая загрузка страницы (начальные параметры)
     useEffect(() => {
@@ -25,100 +36,9 @@ const App = () => {
         const ctx = canvas.getContext("2d");
         saveProps(ctx, canvas);
 
-        //начальная моделька
-        const localDwarf = {
-            BF: {
-                type: "BF",
-                points: [
-                    { x: -3, y: 0 },
-                    { x: -3, y: 4 },
-                    { x: 3, y: 4 },
-                    { x: 3, y: 0 },
-                ],
-            },
-            LHF: {
-                type: "LHF",
-                points: [
-                    { x: -6, y: 0 },
-                    { x: -6, y: 2 },
-                    { x: -3, y: 2 },
-                    { x: -3, y: 0 },
-                ],
-            },
-            RHF: {
-                type: "RHF",
-                points: [
-                    { x: 6, y: 0 },
-                    { x: 6, y: 2 },
-                    { x: 3, y: 2 },
-                    { x: 3, y: 0 },
-                ],
-            },
-            FF: {
-                type: "FF",
-                points: [
-                    { x: -3, y: -4 },
-                    { x: -3, y: 0 },
-                    { x: 3, y: 0 },
-                    { x: 3, y: -4 },
-                ],
-            },
-            HF: {
-                type: "HF",
-                points: [
-                    { x: -3, y: -4 },
-                    { x: 3, y: -4 },
-                    { x: 0, y: -10 },
-                ],
-            },
-            LLF: {
-                type: "LLF",
-                points: [
-                    { x: -3, y: 4 },
-                    { x: -3, y: 8 },
-                    { x: -1, y: 8 },
-                    { x: -1, y: 4 },
-                ],
-            },
-            RLF: {
-                type: "RLF",
-                points: [
-                    { x: 1, y: 4 },
-                    { x: 1, y: 8 },
-                    { x: 3, y: 8 },
-                    { x: 3, y: 4 },
-                ],
-            },
-            E1: {
-                type: "E1",
-                points: [
-                    { x: -2, y: -3 },
-                    { x: -2, y: -2 },
-                    { x: -1, y: -2 },
-                    { x: -1, y: -3 },
-                ],
-            },
-            E2: {
-                type: "E2",
-                points: [
-                    { x: 1, y: -3 },
-                    { x: 1, y: -2 },
-                    { x: 2, y: -2 },
-                    { x: 2, y: -3 },
-                ],
-            },
-            M: {
-                type: "M",
-                points: [
-                    { x: -2, y: -1 },
-                    { x: -2, y: 0 },
-                    { x: 2, y: 0 },
-                    { x: 2, y: -1 },
-                ],
-            },
-        };
-        setDwarf(localDwarf); //установка начальной модельки
-        setDwarfMatrix(convertModelToMatrix(localDwarf)); //создание матрицы координат
+        setDwarf(dwarfModel); //установка начальной модельки
+        setDwarfMatrix(convertModelToMatrix(dwarfModel)); //создание матрицы координат
+
         // eslint-disable-next-line
     }, []);
 
@@ -130,13 +50,25 @@ const App = () => {
     };
 
     //масштабирование
-    const onScale = (scale) => {
+    const onScale = (e) => {
         if (!statusDraw) return;
+        if (e.target.tagName === "BUTTON") {
+            if (!srangeDisplay) {
+                setSrangeDisplay(true);
+            } else {
+                setSrangeDisplay(false);
+            }
+            return;
+        }
+        const view = e.target.getAttribute("view");
+        const scale = e.target.value;
+
+        const { sx, sy } = scaleCoordinate(scale, view);
 
         const scaleMatrix = [
             // матрица маштабирования
-            [scale, 0, 0],
-            [0, scale, 0],
+            [sx, 0, 0],
+            [0, sy, 0],
             [0, 0, 1],
         ];
 
@@ -158,11 +90,27 @@ const App = () => {
         drawDwarf(screenDwarf, dwarf);
     };
 
-    const onRotate = (scale) => {
+    const onRotate = (e) => {
         if (!statusDraw) return;
+        if (e.target.tagName === "BUTTON") {
+            if (!srangeDisplay) {
+                setRotateDisplay(true);
+            } else {
+                setRotateDisplay(false);
+            }
+            return;
+        } else {
+            e.target.min = "0";
+            e.target.max = "180";
+            e.target.step = "1";
+        }
+
+        // console.log(e.target.value);
+        const view = e.target.getAttribute("view");
+        // const scale =
 
         // Рассчитываем угол поворота в радианах
-        let angle = 45;
+        let angle = e.target.value;
         let radianAngle = (angle * Math.PI) / 180;
 
         // Создаем матрицу поворота
@@ -174,12 +122,6 @@ const App = () => {
 
         const rotateMatrixDwarf = structuredClone(dwarfMatrix);
         const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
-
-        // for (const bodyPart in moveDwarf) {
-        //     moveDwarf[bodyPart][x] += 0;
-        //     moveDwarf[bodyPart][y] += 10;
-        // }
-        // //переводим из мировых в экранные
         const screenDwarf = coordConvert(rotateDwarf, 10);
         drawDwarf(screenDwarf, dwarf);
     };
@@ -195,6 +137,16 @@ const App = () => {
                         >
                             Повернуть
                         </button>
+                        <Range
+                            onScale={onRotate}
+                            view="x"
+                            dstatus={srotateDisplay}
+                        />
+                        <Range
+                            onScale={onRotate}
+                            view="y"
+                            dstatus={srotateDisplay}
+                        />
                         <button
                             className="buttons-panel-button"
                             onClick={(e) => onMove(5)}
@@ -214,13 +166,29 @@ const App = () => {
                         <button className="buttons-panel-button" onClick={draw}>
                             Отрисовать
                         </button>
-                        <button
-                            className="buttons-panel-button"
-                            // скейл будем брать из инпута (два инпута по x и y)
-                            onClick={(e) => onScale(3)}
-                        >
-                            Масшабировать
-                        </button>
+                        <div className="container-scale">
+                            <button
+                                className="buttons-panel-button"
+                                onClick={onScale}
+                            >
+                                Масшабировать
+                            </button>
+                            <Range
+                                onScale={onScale}
+                                view="all"
+                                dstatus={srangeDisplay}
+                            />
+                            <Range
+                                onScale={onScale}
+                                view="x"
+                                dstatus={srangeDisplay}
+                            />
+                            <Range
+                                onScale={onScale}
+                                view="y"
+                                dstatus={srangeDisplay}
+                            />
+                        </div>
                     </nav>
                 </aside>
             </div>
