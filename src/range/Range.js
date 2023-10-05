@@ -14,7 +14,7 @@ export const Range = ({ onAction, view, displayStatus, type }) => {
                     view={view}
                     min="-360"
                     max="360"
-                    step="1"
+                    step="0.1"
                     style={rangeStyle}
                 />
             </>

@@ -80,10 +80,10 @@ const App = () => {
         // setActionMatrix(rotateDwarf);
         // const screenDwarf = coordConvert(actionMatrix, 10);
 
-        // const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
-        // setActionMatrix(scaleDwarf);
-        // const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
-        // drawDwarf(screenDwarf, dwarf);
+        const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
+        setActionMatrix(scaleDwarf);
+        const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
+        drawDwarf(screenDwarf, dwarf);
     };
 
     const onMove = (scale) => {
