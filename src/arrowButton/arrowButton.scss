@@ -1,0 +1,18 @@
+.arrow-button {
+    margin: 3px 3px;
+    outline: none;
+    background: #ecf0f1;
+    border: 1px solid #d0d3d4;
+    color: black;
+    font-size: 14px;
+    border-radius: 5px;
+
+    transition: all 0.3s ease;
+    width: 35px;
+    height: 35px;
+    font-weight: bold;
+    &:hover {
+        background: #d8dadb;
+        color: black;
+    }
+}

@@ -4,6 +4,7 @@ import { Service } from "../service/graphic-service";
 import { useCoordinate } from "../service/coordinate.hook";
 import { useModel } from "../model/model";
 import { Range } from "../range/Range";
+import { ArrowButton } from "../arrowButton/arrowButton";
 import "./app.scss";
 
 const App = () => {
@@ -19,13 +20,17 @@ const App = () => {
 
     // импорт модельки гнома
     const { dwarfModel } = useModel();
+    const screenConvertScale = 10;
 
     // оригинальный гном в мировых координатах (+его матрица)
     const [dwarf, setDwarf] = useState(null);
     const [dwarfMatrix, setDwarfMatrix] = useState(null);
     const [statusDraw, setStatusDraw] = useState(false);
-    // матрица издевательств
+    // матрицы издевательств
     const [actionMatrix, setActionMatrix] = useState(null);
+    const [actionScaleMatrix, setActionScaleMatrix] = useState(null);
+    const [actionRotateMatrix, setActionRotateMatrix] = useState(null);
+    const [actionMoveMatrix, setActionMoveMatrix] = useState(null);
 
     // панели активности
     const [srangeDisplay, setSrangeDisplay] = useState(false);
@@ -39,7 +44,6 @@ const App = () => {
 
         setDwarf(dwarfModel); //установка начальной модельки
         setDwarfMatrix(convertModelToMatrix(dwarfModel)); //создание матрицы координат
-
         // eslint-disable-next-line
     }, []);
 
@@ -47,23 +51,26 @@ const App = () => {
     const draw = () => {
         setStatusDraw(true);
         setActionMatrix(dwarfMatrix);
-        const screenDwarf = coordConvert(dwarfMatrix, 10); // из мировых в экранные
+        const screenDwarf = coordConvert(dwarfMatrix, screenConvertScale); // из мировых в экранные
         drawDwarf(screenDwarf, dwarf);
     };
 
     //масштабирование
     const onScale = (e) => {
         if (!statusDraw) return;
+        if (srotateDisplay) return;
         if (e.target.tagName === "BUTTON") {
             if (!srangeDisplay) {
                 setSrangeDisplay(true);
+                setActionScaleMatrix(actionMatrix);
             } else {
+                setActionMatrix(actionScaleMatrix);
                 setSrangeDisplay(false);
             }
             return;
         }
         const view = e.target.getAttribute("view");
-        const scale = e.target.value;
+        const scale = Number(e.target.value);
 
         const { sx, sy } = scaleCoordinate(scale, view);
 
@@ -74,63 +81,81 @@ const App = () => {
             [0, 0, 1],
         ];
 
-        // const scaleMatrixDwarf = structuredClone(dwarfMatrix);
-
-        // const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
-        // setActionMatrix(rotateDwarf);
-        // const screenDwarf = coordConvert(actionMatrix, 10);
-
-        const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
-        setActionMatrix(scaleDwarf);
-        const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
+        const scaleDwarf = multiply(actionMatrix, scaleMatrix); //масштабируем
+        setActionScaleMatrix(scaleDwarf);
+        const screenDwarf = coordConvert(scaleDwarf, screenConvertScale); //переводим из мировых в экранные
         drawDwarf(screenDwarf, dwarf);
     };
 
-    const onMove = (scale) => {
+    const onMove = (e) => {
         if (!statusDraw) return;
-
-        const moveDwarf = structuredClone(dwarfMatrix);
-        for (const bodyPart in moveDwarf) {
-            moveDwarf[bodyPart][x] += 0;
-            moveDwarf[bodyPart][y] += 10;
+        const movement = e.target.name;
+        const moveDwarf = structuredClone(actionMatrix);
+        let screenDwarf;
+        switch (movement) {
+            case "U":
+                for (const bodyPart in moveDwarf) {
+                    moveDwarf[bodyPart][y] -= 1;
+                }
+                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                drawDwarf(screenDwarf, dwarf);
+                break;
+            case "L":
+                for (const bodyPart in moveDwarf) {
+                    moveDwarf[bodyPart][x] -= 1;
+                }
+                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                drawDwarf(screenDwarf, dwarf);
+                break;
+            case "R":
+                for (const bodyPart in moveDwarf) {
+                    moveDwarf[bodyPart][x] += 1;
+                }
+                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                drawDwarf(screenDwarf, dwarf);
+                break;
+            case "D":
+                for (const bodyPart in moveDwarf) {
+                    moveDwarf[bodyPart][y] += 1;
+                }
+                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                drawDwarf(screenDwarf, dwarf);
+                break;
+            default:
+                return;
         }
-        //переводим из мировых в экранные
-        const screenDwarf = coordConvert(moveDwarf, 10);
-        drawDwarf(screenDwarf, dwarf);
+        setActionMatrix(moveDwarf);
     };
 
     const onRotate = (e) => {
         if (!statusDraw) return;
+        if (srangeDisplay) return;
         if (e.target.tagName === "BUTTON") {
-            if (!srangeDisplay) {
+            if (!srotateDisplay) {
+                setActionRotateMatrix(actionMatrix);
                 setRotateDisplay(true);
             } else {
+                setActionMatrix(actionRotateMatrix);
                 setRotateDisplay(false);
             }
             return;
         }
-
-        // console.log(e.target.value);
-        // const view = e.target.getAttribute("view");
-        // const scale =
-
         // Рассчитываем угол поворота в радианах
         let angle = e.target.value;
-        console.log(angle);
         let radianAngle = (angle * Math.PI) / 180;
 
         // Создаем матрицу поворота
         let rotationMatrix = [
-            [Math.cos(radianAngle), -Math.sin(radianAngle), 0],
-            [Math.sin(radianAngle), Math.cos(radianAngle), 0],
+            [Math.cos(radianAngle), Math.sin(radianAngle), 0],
+            [-Math.sin(radianAngle), Math.cos(radianAngle), 0],
             [0, 0, 1],
         ];
 
-        const rotateMatrixDwarf = structuredClone(dwarfMatrix);
+        const rotateMatrixDwarf = structuredClone(actionMatrix);
         const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
-        setActionMatrix(rotateDwarf);
+        setActionRotateMatrix(rotateDwarf);
         // * ОШИБКА ПЕРВОГО РАЗА
-        const screenDwarf = coordConvert(actionMatrix, 10);
+        const screenDwarf = coordConvert(rotateDwarf, 10);
         drawDwarf(screenDwarf, dwarf);
     };
 
@@ -157,12 +182,19 @@ const App = () => {
                             displayStatus={srotateDisplay}
                             type="rotate2"
                         /> */}
-                        <button
-                            className="buttons-panel-button"
-                            onClick={(e) => onMove(5)}
-                        >
+                        <button className="buttons-panel-button" disabled>
                             Переместить
                         </button>
+                        <div className="up-down-button">
+                            <ArrowButton name={"U"} onAction={onMove} />
+                        </div>
+                        <div className="left-right-button">
+                            <ArrowButton name={"L"} onAction={onMove} />
+                            <ArrowButton name={"R"} onAction={onMove} />
+                        </div>
+                        <div className="up-down-button">
+                            <ArrowButton name={"D"} onAction={onMove} />
+                        </div>
                     </nav>
                 </aside>
                 <canvas
@@ -211,6 +243,4 @@ const App = () => {
 
 export default App;
 
-//* Вместо инпутов можно перемещать по нажатию стрелочек
-//* Поворачивать с помощью какой нибудь крутилки
-//* А увеличивать с помощью ползунка
+// * Фикс инфляции изображения - настройка value у range

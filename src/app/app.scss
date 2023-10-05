@@ -72,3 +72,13 @@ body {
     border: 1px solid #d0d3d4;
     border-radius: 5px;
 }
+
+.up-down-button {
+    display: flex;
+    justify-content: center;
+}
+
+.left-right-button {
+    display: flex;
+    justify-content: space-around;
+}
