@@ -9,7 +9,6 @@ import "./app.scss";
 const App = () => {
     // ссылка на полотно
     const canvasRef = useRef(null);
-    const scaleRangeRef = useRef(null);
 
     //импорт сервисных функций
     const { convertModelToMatrix, drawDwarf, coordConvert, saveProps } =
@@ -25,6 +24,8 @@ const App = () => {
     const [dwarf, setDwarf] = useState(null);
     const [dwarfMatrix, setDwarfMatrix] = useState(null);
     const [statusDraw, setStatusDraw] = useState(false);
+    // матрица издевательств
+    const [actionMatrix, setActionMatrix] = useState(null);
 
     // панели активности
     const [srangeDisplay, setSrangeDisplay] = useState(false);
@@ -45,6 +46,7 @@ const App = () => {
     //отрисовка
     const draw = () => {
         setStatusDraw(true);
+        setActionMatrix(dwarfMatrix);
         const screenDwarf = coordConvert(dwarfMatrix, 10); // из мировых в экранные
         drawDwarf(screenDwarf, dwarf);
     };
@@ -72,9 +74,16 @@ const App = () => {
             [0, 0, 1],
         ];
 
-        const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
-        const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
-        drawDwarf(screenDwarf, dwarf);
+        // const scaleMatrixDwarf = structuredClone(dwarfMatrix);
+
+        // const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
+        // setActionMatrix(rotateDwarf);
+        // const screenDwarf = coordConvert(actionMatrix, 10);
+
+        // const scaleDwarf = multiply(dwarfMatrix, scaleMatrix); //масштабируем
+        // setActionMatrix(scaleDwarf);
+        // const screenDwarf = coordConvert(scaleDwarf, 10); //переводим из мировых в экранные
+        // drawDwarf(screenDwarf, dwarf);
     };
 
     const onMove = (scale) => {
@@ -99,18 +108,15 @@ const App = () => {
                 setRotateDisplay(false);
             }
             return;
-        } else {
-            e.target.min = "0";
-            e.target.max = "180";
-            e.target.step = "1";
         }
 
         // console.log(e.target.value);
-        const view = e.target.getAttribute("view");
+        // const view = e.target.getAttribute("view");
         // const scale =
 
         // Рассчитываем угол поворота в радианах
         let angle = e.target.value;
+        console.log(angle);
         let radianAngle = (angle * Math.PI) / 180;
 
         // Создаем матрицу поворота
@@ -122,7 +128,9 @@ const App = () => {
 
         const rotateMatrixDwarf = structuredClone(dwarfMatrix);
         const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
-        const screenDwarf = coordConvert(rotateDwarf, 10);
+        setActionMatrix(rotateDwarf);
+        // * ОШИБКА ПЕРВОГО РАЗА
+        const screenDwarf = coordConvert(actionMatrix, 10);
         drawDwarf(screenDwarf, dwarf);
     };
 
@@ -138,15 +146,17 @@ const App = () => {
                             Повернуть
                         </button>
                         <Range
-                            onScale={onRotate}
+                            onAction={onRotate}
                             view="x"
-                            dstatus={srotateDisplay}
+                            displayStatus={srotateDisplay}
+                            type="rotate1"
                         />
-                        <Range
-                            onScale={onRotate}
+                        {/* <Range
+                            onAction={onRotate}
                             view="y"
-                            dstatus={srotateDisplay}
-                        />
+                            displayStatus={srotateDisplay}
+                            type="rotate2"
+                        /> */}
                         <button
                             className="buttons-panel-button"
                             onClick={(e) => onMove(5)}
@@ -174,19 +184,22 @@ const App = () => {
                                 Масшабировать
                             </button>
                             <Range
-                                onScale={onScale}
+                                onAction={onScale}
                                 view="all"
-                                dstatus={srangeDisplay}
+                                displayStatus={srangeDisplay}
+                                type="scale"
                             />
                             <Range
-                                onScale={onScale}
+                                onAction={onScale}
                                 view="x"
-                                dstatus={srangeDisplay}
+                                displayStatus={srangeDisplay}
+                                type="scale"
                             />
                             <Range
-                                onScale={onScale}
+                                onAction={onScale}
                                 view="y"
-                                dstatus={srangeDisplay}
+                                displayStatus={srangeDisplay}
+                                type="scale"
                             />
                         </div>
                     </nav>
