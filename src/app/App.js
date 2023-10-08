@@ -52,6 +52,7 @@ const App = () => {
         setStatusDraw(true);
         setActionMatrix(dwarfMatrix);
         const screenDwarf = coordConvert(dwarfMatrix, screenConvertScale); // из мировых в экранные
+
         drawDwarf(screenDwarf, dwarf);
     };
 
@@ -154,8 +155,8 @@ const App = () => {
         const rotateMatrixDwarf = structuredClone(actionMatrix);
         const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
         setActionRotateMatrix(rotateDwarf);
-        // * ОШИБКА ПЕРВОГО РАЗА
         const screenDwarf = coordConvert(rotateDwarf, 10);
+        console.log(screenDwarf);
         drawDwarf(screenDwarf, dwarf);
     };
 
@@ -244,3 +245,4 @@ const App = () => {
 export default App;
 
 // * Фикс инфляции изображения - настройка value у range
+// * Ортогональная проекция
