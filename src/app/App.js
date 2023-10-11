@@ -12,25 +12,33 @@ const App = () => {
     const canvasRef = useRef(null);
 
     //импорт сервисных функций
-    const { convertModelToMatrix, drawDwarf, coordConvert, saveProps } =
-        Service();
+    const {
+        convertModelToMatrix,
+        drawDwarf,
+        coordConvert,
+        saveProps,
+        drawDwarfConnection,
+        clearCanvas,
+    } = Service();
 
     // импорт хука для работы с координатами
     const { x, y, scaleCoordinate } = useCoordinate();
 
     // импорт модельки гнома
-    const { dwarfModel } = useModel();
+    const { dwarfModelFront, dwarfModelBack } = useModel();
     const screenConvertScale = 10;
 
-    // оригинальный гном в мировых координатах (+его матрица)
+    // оригинальный гном в мировых координатах (+его матрицы)
     const [dwarf, setDwarf] = useState(null);
-    const [dwarfMatrix, setDwarfMatrix] = useState(null);
+    const [dwarfMatrixFront, setdwarfMatrixFront] = useState(null);
+    const [dwarfMatrixBack, setdwarfMatrixBack] = useState(null);
     const [statusDraw, setStatusDraw] = useState(false);
-    // матрицы издевательств
+
+    // матрицы издевательств (все экшен матрицы объединить)
     const [actionMatrix, setActionMatrix] = useState(null);
     const [actionScaleMatrix, setActionScaleMatrix] = useState(null);
     const [actionRotateMatrix, setActionRotateMatrix] = useState(null);
-    const [actionMoveMatrix, setActionMoveMatrix] = useState(null);
+    // const [actionMoveMatrix, setActionMoveMatrix] = useState(null);
 
     // панели активности
     const [srangeDisplay, setSrangeDisplay] = useState(false);
@@ -38,21 +46,35 @@ const App = () => {
 
     // первая загрузка страницы (начальные параметры)
     useEffect(() => {
+        // параметры полотна
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
         saveProps(ctx, canvas);
 
-        setDwarf(dwarfModel); //установка начальной модельки
-        setDwarfMatrix(convertModelToMatrix(dwarfModel)); //создание матрицы координат
+        //установка начальной модельки и её матриц
+        setDwarf(dwarfModelFront);
+        setdwarfMatrixFront(convertModelToMatrix(dwarfModelFront));
+        setdwarfMatrixBack(convertModelToMatrix(dwarfModelBack));
+
         // eslint-disable-next-line
     }, []);
 
     //отрисовка
     const draw = () => {
+        clearCanvas();
         setStatusDraw(true);
-        setActionMatrix(dwarfMatrix);
-        const screenDwarf = coordConvert(dwarfMatrix, screenConvertScale); // из мировых в экранные
-        drawDwarf(screenDwarf, dwarf);
+        setActionMatrix(dwarfMatrixFront);
+        const screenDwarfFront = coordConvert(
+            dwarfMatrixFront,
+            screenConvertScale
+        );
+        const screenDwarfBack = coordConvert(
+            dwarfMatrixBack,
+            screenConvertScale
+        );
+        drawDwarf(screenDwarfFront, dwarf);
+        drawDwarf(screenDwarfBack, dwarf);
+        drawDwarfConnection(screenDwarfFront, screenDwarfBack);
     };
 
     //масштабирование
@@ -176,12 +198,6 @@ const App = () => {
                             displayStatus={srotateDisplay}
                             type="rotate1"
                         />
-                        {/* <Range
-                            onAction={onRotate}
-                            view="y"
-                            displayStatus={srotateDisplay}
-                            type="rotate2"
-                        /> */}
                         <button className="buttons-panel-button" disabled>
                             Переместить
                         </button>
