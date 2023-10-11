@@ -52,7 +52,6 @@ const App = () => {
         setStatusDraw(true);
         setActionMatrix(dwarfMatrix);
         const screenDwarf = coordConvert(dwarfMatrix, screenConvertScale); // из мировых в экранные
-
         drawDwarf(screenDwarf, dwarf);
     };
 
