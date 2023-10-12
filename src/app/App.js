@@ -26,15 +26,15 @@ const App = () => {
 
     // импорт модельки гнома
     const { dwarfModelFront, dwarfModelBack } = useModel();
-    const screenConvertScale = 10;
+    const screenScale = 10;
 
     // оригинальный гном в мировых координатах (+его матрицы)
     const [dwarf, setDwarf] = useState(null);
-    const [dwarfMatrixFront, setdwarfMatrixFront] = useState(null);
-    const [dwarfMatrixBack, setdwarfMatrixBack] = useState(null);
+    const [dwarfMatrix, setDwarfMatrix] = useState(null);
     const [statusDraw, setStatusDraw] = useState(false);
 
     // матрицы издевательств (все экшен матрицы объединить)
+    //9
     const [actionMatrix, setActionMatrix] = useState(null);
     const [actionScaleMatrix, setActionScaleMatrix] = useState(null);
     const [actionRotateMatrix, setActionRotateMatrix] = useState(null);
@@ -52,29 +52,35 @@ const App = () => {
         saveProps(ctx, canvas);
 
         //установка начальной модельки и её матриц
-        setDwarf(dwarfModelFront);
-        setdwarfMatrixFront(convertModelToMatrix(dwarfModelFront));
-        setdwarfMatrixBack(convertModelToMatrix(dwarfModelBack));
+        let dwarf = {
+            front: dwarfModelFront,
+            back: dwarfModelBack,
+        };
+        setDwarf(dwarf);
+        let dwarfMatrix = {
+            front: convertModelToMatrix(dwarfModelFront),
+            back: convertModelToMatrix(dwarfModelBack),
+        };
+        setDwarfMatrix(dwarfMatrix);
 
         // eslint-disable-next-line
     }, []);
 
+    const draw = (front, back) => {
+        const screenDwarfFront = coordConvert(front, screenScale);
+        const screenDwarfBack = coordConvert(back, screenScale);
+        drawDwarf(screenDwarfFront, dwarf.front);
+        drawDwarf(screenDwarfBack, dwarf.back);
+        drawDwarfConnection(screenDwarfFront, screenDwarfBack);
+    };
+
     //отрисовка
-    const draw = () => {
+    const firstDraw = () => {
         clearCanvas();
         setStatusDraw(true);
-        setActionMatrix(dwarfMatrixFront);
-        const screenDwarfFront = coordConvert(
-            dwarfMatrixFront,
-            screenConvertScale
-        );
-        const screenDwarfBack = coordConvert(
-            dwarfMatrixBack,
-            screenConvertScale
-        );
-        drawDwarf(screenDwarfFront, dwarf);
-        drawDwarf(screenDwarfBack, dwarf);
-        drawDwarfConnection(screenDwarfFront, screenDwarfBack);
+
+        setActionMatrix(dwarfMatrix);
+        draw(dwarfMatrix.front, dwarfMatrix.back);
     };
 
     //масштабирование
@@ -96,17 +102,21 @@ const App = () => {
 
         const { sx, sy } = scaleCoordinate(scale, view);
 
+        // масшабирование по z - ???
+        let sz = 1;
+
         const scaleMatrix = [
             // матрица маштабирования
-            [sx, 0, 0],
-            [0, sy, 0],
-            [0, 0, 1],
+            [sx, 0, 0, 0],
+            [0, sy, 0, 0],
+            [0, 0, sz, 0],
+            [0, 0, 0, 1],
         ];
 
-        const scaleDwarf = multiply(actionMatrix, scaleMatrix); //масштабируем
-        setActionScaleMatrix(scaleDwarf);
-        const screenDwarf = coordConvert(scaleDwarf, screenConvertScale); //переводим из мировых в экранные
-        drawDwarf(screenDwarf, dwarf);
+        const scaleDwarfF = multiply(actionMatrix.front, scaleMatrix); //масштабируем
+        const scaleDwarfB = multiply(actionMatrix.back, scaleMatrix);
+
+        draw(scaleDwarfF, scaleDwarfB);
     };
 
     const onMove = (e) => {
@@ -119,28 +129,28 @@ const App = () => {
                 for (const bodyPart in moveDwarf) {
                     moveDwarf[bodyPart][y] -= 1;
                 }
-                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                screenDwarf = coordConvert(moveDwarf, screenScale);
                 drawDwarf(screenDwarf, dwarf);
                 break;
             case "L":
                 for (const bodyPart in moveDwarf) {
                     moveDwarf[bodyPart][x] -= 1;
                 }
-                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                screenDwarf = coordConvert(moveDwarf, screenScale);
                 drawDwarf(screenDwarf, dwarf);
                 break;
             case "R":
                 for (const bodyPart in moveDwarf) {
                     moveDwarf[bodyPart][x] += 1;
                 }
-                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                screenDwarf = coordConvert(moveDwarf, screenScale);
                 drawDwarf(screenDwarf, dwarf);
                 break;
             case "D":
                 for (const bodyPart in moveDwarf) {
                     moveDwarf[bodyPart][y] += 1;
                 }
-                screenDwarf = coordConvert(moveDwarf, screenConvertScale);
+                screenDwarf = coordConvert(moveDwarf, screenScale);
                 drawDwarf(screenDwarf, dwarf);
                 break;
             default:
@@ -161,26 +171,52 @@ const App = () => {
                 setRotateDisplay(false);
             }
             return;
+        } else {
+            clearCanvas();
         }
         // Рассчитываем угол поворота в радианах
         let angle = e.target.value;
         let radianAngle = (angle * Math.PI) / 180;
 
         // Создаем матрицу поворота
-        let rotationMatrix = [
-            [Math.cos(radianAngle), Math.sin(radianAngle), 0],
-            [-Math.sin(radianAngle), Math.cos(radianAngle), 0],
-            [0, 0, 1],
+        let rotationMatrixX = [
+            [1, 0, 0, 0],
+            [0, Math.cos(radianAngle), Math.sin(radianAngle), 0],
+            [0, Math.sin(radianAngle), Math.cos(radianAngle), 0],
+            [0, 0, 0, 1],
         ];
 
-        const rotateMatrixDwarf = structuredClone(actionMatrix);
-        const rotateDwarf = multiply(rotateMatrixDwarf, rotationMatrix);
-        setActionRotateMatrix(rotateDwarf);
-        const screenDwarf = coordConvert(rotateDwarf, 10);
-        console.log(screenDwarf);
-        drawDwarf(screenDwarf, dwarf);
-    };
+        let rotationMatrixY = [
+            [Math.cos(radianAngle), 0, -Math.sin(radianAngle), 0],
+            [0, 1, 0, 0],
+            [Math.sin(radianAngle), 0, Math.cos(radianAngle), 0],
+            [0, 0, 0, 1],
+        ];
 
+        let rotationMatrixZ = [
+            [Math.cos(radianAngle), Math.sin(radianAngle), 0, 0],
+            [-Math.sin(radianAngle), Math.cos(radianAngle), 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ];
+
+        const rotateMatrixDwarfF = structuredClone(actionMatrix.front);
+        const rotateMatrixDwarfB = structuredClone(actionMatrix.back);
+        let rotateDwarfF;
+        let rotateDwarfB;
+        if (e.target.getAttribute("view") === "x") {
+            rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixX); //масштабируем
+            rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixX);
+        } else if (e.target.getAttribute("view") === "y") {
+            rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixY); //масштабируем
+            rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixY);
+        } else {
+            rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixZ); //масштабируем
+            rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixZ);
+        }
+
+        draw(rotateDwarfF, rotateDwarfB);
+    };
     return (
         <>
             <div className="container">
@@ -195,6 +231,18 @@ const App = () => {
                         <Range
                             onAction={onRotate}
                             view="x"
+                            displayStatus={srotateDisplay}
+                            type="rotate1"
+                        />
+                        <Range
+                            onAction={onRotate}
+                            view="y"
+                            displayStatus={srotateDisplay}
+                            type="rotate1"
+                        />
+                        <Range
+                            onAction={onRotate}
+                            view="z"
                             displayStatus={srotateDisplay}
                             type="rotate1"
                         />
@@ -221,7 +269,10 @@ const App = () => {
                 ></canvas>
                 <aside className="buttons-panel">
                     <nav className="buttons-panel-navigate">
-                        <button className="buttons-panel-button" onClick={draw}>
+                        <button
+                            className="buttons-panel-button"
+                            onClick={firstDraw}
+                        >
                             Отрисовать
                         </button>
                         <div className="container-scale">

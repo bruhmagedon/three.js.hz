@@ -28,26 +28,31 @@ export const Service = () => {
 
     //отрисовка всего тела используя матрицу
     const drawDwarf = (matrix, dwarf) => {
+        let color = false;
+        if (matrix.length < 38) {
+            color = true;
+        }
         let indecator = 0;
         for (const bodyPart in dwarf) {
             if (bodyPart !== "HF") {
-                indecator = drawBodyPart(matrix, indecator, 4, ctx);
+                indecator = drawBodyPart(matrix, indecator, 4, color);
             } else {
-                indecator = drawBodyPart(matrix, indecator, 3, ctx);
+                indecator = drawBodyPart(matrix, indecator, 3, color);
             }
         }
     };
 
     //отрисовка части тела (задняя или передняя часть)
-    const drawBodyPart = (fullMatrix, indecator, bodyType) => {
+    const drawBodyPart = (fullMatrix, indecator, bodyType, color) => {
         ctx.beginPath();
         ctx.moveTo(fullMatrix[indecator][0], fullMatrix[indecator][1]);
         for (let i = indecator; i < indecator + bodyType; i++) {
             ctx.lineTo(fullMatrix[i][0], fullMatrix[i][1]);
         }
         ctx.closePath();
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 0.1;
+
+        ctx.strokeStyle = color ? "green" : "black";
+        ctx.lineWidth = color ? 0.5 : 0.3;
         ctx.stroke();
         return indecator + bodyType;
     };
@@ -60,7 +65,7 @@ export const Service = () => {
             ctx.lineTo(matrixBack[i][0], matrixBack[i][1]);
             ctx.closePath();
             ctx.strokeStyle = "black";
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 0.5;
             ctx.stroke();
         }
     };
