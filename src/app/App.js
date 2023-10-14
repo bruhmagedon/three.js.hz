@@ -38,6 +38,7 @@ const App = () => {
     const [actionMatrix, setActionMatrix] = useState(null);
     const [actionScaleMatrix, setActionScaleMatrix] = useState(null);
     const [actionRotateMatrix, setActionRotateMatrix] = useState(null);
+    const [rotateStatus, setRotateStatus] = useState(null);
     // const [actionMoveMatrix, setActionMoveMatrix] = useState(null);
 
     // панели активности
@@ -96,6 +97,8 @@ const App = () => {
                 setSrangeDisplay(false);
             }
             return;
+        } else {
+            clearCanvas();
         }
         const view = e.target.getAttribute("view");
         const scale = Number(e.target.value);
@@ -109,12 +112,13 @@ const App = () => {
             // матрица маштабирования
             [sx, 0, 0, 0],
             [0, sy, 0, 0],
-            [0, 0, sz, 0],
+            [0, 0, sy, 0],
             [0, 0, 0, 1],
         ];
 
         const scaleDwarfF = multiply(actionMatrix.front, scaleMatrix); //масштабируем
         const scaleDwarfB = multiply(actionMatrix.back, scaleMatrix);
+        setActionScaleMatrix({ front: scaleDwarfF, back: scaleDwarfB });
 
         draw(scaleDwarfF, scaleDwarfB);
     };
@@ -200,19 +204,28 @@ const App = () => {
             [0, 0, 0, 1],
         ];
 
-        const rotateMatrixDwarfF = structuredClone(actionMatrix.front);
-        const rotateMatrixDwarfB = structuredClone(actionMatrix.back);
+        const rotateMatrixDwarfF = structuredClone(actionRotateMatrix.front);
+        const rotateMatrixDwarfB = structuredClone(actionRotateMatrix.back);
         let rotateDwarfF;
         let rotateDwarfB;
-        if (e.target.getAttribute("view") === "x") {
+        let status = e.target.getAttribute("view");
+
+        if (status === "x") {
+            setStatusDraw("x");
             rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixX); //масштабируем
             rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixX);
-        } else if (e.target.getAttribute("view") === "y") {
+        } else if (status === "y") {
+            setStatusDraw("y");
             rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixY); //масштабируем
             rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixY);
         } else {
+            setStatusDraw("z");
             rotateDwarfF = multiply(rotateMatrixDwarfF, rotationMatrixZ); //масштабируем
             rotateDwarfB = multiply(rotateMatrixDwarfB, rotationMatrixZ);
+        }
+
+        if (statusDraw !== status) {
+            setActionRotateMatrix({ front: rotateDwarfF, back: rotateDwarfB });
         }
 
         draw(rotateDwarfF, rotateDwarfB);
