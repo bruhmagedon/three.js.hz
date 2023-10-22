@@ -1,71 +1,63 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useContext } from "react";
 import { multiply } from "mathjs";
+import { ModelContext } from "../app/App";
 
 export const Service = () => {
+    const x = 0,
+        y = 1;
     // состояние полотна и контекст
     const [canvas, setCanvas] = useState(null);
     const [ctx, setCanvasContext] = useState(null);
-
-    const saveProps = (canvas, ctx) => {
-        setCanvas(ctx);
-        setCanvasContext(canvas);
+    const saveCanvasSettings = ({ canvas, ctx }) => {
+        setCanvas(canvas);
+        setCanvasContext(ctx);
     };
 
-    const convertModelToMatrix = (localDwarf) => {
-        const fullMatrix = [];
-        for (const bodyPart in localDwarf) {
-            for (const part of localDwarf[bodyPart].points) {
-                const localPart = [part.x, part.y, part.z, 1];
-                fullMatrix.push(localPart);
-            }
+    useEffect(() => {
+        if (canvas) {
+            const depthBuffer = new Array(canvas.width * canvas.height);
         }
-        return fullMatrix;
-    };
+    }, [canvas]);
 
     const clearCanvas = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
-    //отрисовка всего тела используя матрицу
-    const drawDwarf = (matrix, dwarf) => {
-        let color = false;
-        if (matrix.length < 38) {
-            color = true;
-        }
-        let indecator = 0;
-        for (const bodyPart in dwarf) {
-            if (bodyPart !== "HF") {
-                indecator = drawBodyPart(matrix, indecator, 4, color);
-            } else {
-                indecator = drawBodyPart(matrix, indecator, 3, color);
-            }
-        }
-    };
+    const drawModel = (matrix, edges) => {
+        console.log(matrix);
+        // console.log(matrix);
+        clearCanvas();
+        // из мировых в экранные
+        const localMatrix = coordConvert(matrix, 15);
 
-    //отрисовка части тела (задняя или передняя часть)
-    const drawBodyPart = (fullMatrix, indecator, bodyType, color) => {
-        ctx.beginPath();
-        ctx.moveTo(fullMatrix[indecator][0], fullMatrix[indecator][1]);
-        for (let i = indecator; i < indecator + bodyType; i++) {
-            ctx.lineTo(fullMatrix[i][0], fullMatrix[i][1]);
-        }
-        ctx.closePath();
-
-        ctx.strokeStyle = color ? "green" : "black";
-        ctx.lineWidth = color ? 0.5 : 0.3;
-        ctx.stroke();
-        return indecator + bodyType;
-    };
-
-    //связующие линии двух матриц
-    const drawDwarfConnection = (matrixFront, matrixBack, dwarf) => {
-        for (let i = 0; i < matrixBack.length; i++) {
+        let i = 1;
+        // и рисуем
+        for (let edge of edges) {
             ctx.beginPath();
-            ctx.moveTo(matrixFront[i][0], matrixFront[i][1]);
-            ctx.lineTo(matrixBack[i][0], matrixBack[i][1]);
+            // от первой точки
+            ctx.moveTo(localMatrix[edge[0]][x], localMatrix[edge[0]][y]);
+            // до второй
+            ctx.lineTo(localMatrix[edge[1]][x], localMatrix[edge[1]][y]);
             ctx.closePath();
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 0.5;
+
+            // * тестовый куб
+            if (i < 5) {
+                // * зад
+                ctx.strokeStyle = "transparent";
+                // console.log(edge + " purple");
+            } else if (i > 4 && i < 9) {
+                // * перед
+                ctx.strokeStyle = "orange";
+                // console.log(edge + " orange");
+            } else {
+                // * ребра
+                ctx.strokeStyle = "green";
+                // console.log(edge + " green");
+            }
+            i++;
+
+            // ctx.strokeStyle = "black";
+            // ctx.lineWidth = 0.5;
             ctx.stroke();
         }
     };
@@ -83,17 +75,50 @@ export const Service = () => {
         for (const bodyPart of convertMatrix) {
             bodyPart[0] += canvas.width / 2;
             bodyPart[1] += canvas.width / 2;
-            bodyPart[2] += canvas.width / 2; // ??????????
+            // bodyPart[2] += canvas.width / 2; // ??????????
         }
         return convertMatrix;
     };
 
     return {
-        convertModelToMatrix,
-        drawDwarf,
-        coordConvert,
-        saveProps,
-        drawDwarfConnection,
-        clearCanvas,
+        saveCanvasSettings,
+        drawModel,
     };
+};
+
+export const Canvas = () => {
+    const canvasRef = useRef(null);
+    const modelContext = useContext(ModelContext);
+    const {
+        drawModel: { matrixModel, edges },
+    } = modelContext;
+    const { saveCanvasSettings, drawModel } = Service();
+
+    //! канвас сохраняется при первом рендере полотна
+    useEffect(() => {
+        saveCanvasSettings({
+            canvas: canvasRef.current,
+            ctx: canvasRef.current.getContext("2d"),
+        });
+        // eslint-disable-next-line
+    }, []);
+
+    //! обновляемая модель, которая приходит из вне, затем рисуется в сервисе
+    useEffect(() => {
+        if (matrixModel) {
+            drawModel(matrixModel, edges);
+        }
+        // eslint-disable-next-line
+    }, [matrixModel]);
+
+    return (
+        <>
+            <canvas
+                width={400}
+                height={400}
+                ref={canvasRef} //ссылка на элемент
+                className="canvas"
+            ></canvas>
+        </>
+    );
 };
