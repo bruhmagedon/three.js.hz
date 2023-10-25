@@ -2,6 +2,10 @@ import { useState, useRef, useEffect, useContext } from "react";
 import { multiply } from "mathjs";
 import { ModelContext } from "../app/App";
 
+import * as THREE from "three";
+
+// * three
+
 export const Service = () => {
     const x = 0,
         y = 1;
@@ -13,53 +17,51 @@ export const Service = () => {
         setCanvasContext(ctx);
     };
 
-    useEffect(() => {
-        if (canvas) {
-            const depthBuffer = new Array(canvas.width * canvas.height);
-        }
-    }, [canvas]);
-
     const clearCanvas = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
 
+    const drawAxis = () => {
+        const center = [canvas.width / 2, canvas.height / 2, 0];
+        ctx.beginPath();
+        ctx.moveTo(center[0], center[1]);
+        ctx.lineTo(center[0], center[1] - 200);
+
+        ctx.moveTo(center[0], center[1]);
+        ctx.lineTo(center[0] + 200, center[1]);
+
+        ctx.moveTo(center[0], center[1]);
+        ctx.lineTo(center[0] - 150, center[1] + 150);
+
+        ctx.closePath();
+        ctx.lineWidth = 0.1;
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+    };
+
     const drawModel = (matrix, edges) => {
-        console.log(matrix);
-        // console.log(matrix);
-        clearCanvas();
-        // из мировых в экранные
-        const localMatrix = coordConvert(matrix, 15);
+        const scene = new THREE.Scene();
+        const geometry = new THREE.BoxGeometry(1, 1, 1);
+        const material = new THREE.MeshBasicMaterial({ color: "purple" });
+        const mesh = new THREE.Mesh(geometry, material);
 
-        let i = 1;
-        // и рисуем
-        for (let edge of edges) {
-            ctx.beginPath();
-            // от первой точки
-            ctx.moveTo(localMatrix[edge[0]][x], localMatrix[edge[0]][y]);
-            // до второй
-            ctx.lineTo(localMatrix[edge[1]][x], localMatrix[edge[1]][y]);
-            ctx.closePath();
+        scene.add(mesh);
 
-            // * тестовый куб
-            if (i < 5) {
-                // * зад
-                ctx.strokeStyle = "transparent";
-                // console.log(edge + " purple");
-            } else if (i > 4 && i < 9) {
-                // * перед
-                ctx.strokeStyle = "orange";
-                // console.log(edge + " orange");
-            } else {
-                // * ребра
-                ctx.strokeStyle = "green";
-                // console.log(edge + " green");
-            }
-            i++;
+        const sizes = {
+            width: 600,
+            height: 600,
+        };
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            sizes.width / sizes.height
+        );
+        scene.add(camera);
 
-            // ctx.strokeStyle = "black";
-            // ctx.lineWidth = 0.5;
-            ctx.stroke();
-        }
+        console.log(canvas);
+        const renderer = new THREE.WebGLRenderer({ canvas });
+        console.log(renderer);
+
+        // renderer.render(scene, camera);
     };
 
     const coordConvert = (dwarfMatrix, scale) => {
@@ -75,7 +77,6 @@ export const Service = () => {
         for (const bodyPart of convertMatrix) {
             bodyPart[0] += canvas.width / 2;
             bodyPart[1] += canvas.width / 2;
-            // bodyPart[2] += canvas.width / 2; // ??????????
         }
         return convertMatrix;
     };
@@ -105,6 +106,7 @@ export const Canvas = () => {
 
     //! обновляемая модель, которая приходит из вне, затем рисуется в сервисе
     useEffect(() => {
+        console.log(matrixModel);
         if (matrixModel) {
             drawModel(matrixModel, edges);
         }
@@ -114,8 +116,8 @@ export const Canvas = () => {
     return (
         <>
             <canvas
-                width={400}
-                height={400}
+                width={800}
+                height={600}
                 ref={canvasRef} //ссылка на элемент
                 className="canvas"
             ></canvas>
