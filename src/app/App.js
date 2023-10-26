@@ -44,13 +44,11 @@ const App = () => {
                     </ModelContext.Provider>
                 </nav>
             </aside> */}
-            {/* <ModelContext.Provider value={{ drawModel }}> */}
-            <Canvas camera={{ fov: 45 }}>
+            <ModelContext.Provider value={{ drawModel }}>
                 <MyCanvas />
-            </Canvas>
-            {/* </ModelContext.Provider> */}
+            </ModelContext.Provider>
 
-            {/* <aside className="buttons-panel">
+            <aside className="buttons-panel">
                 <nav className="buttons-panel-navigate">
                     <ModelContext.Provider
                         value={{
@@ -62,11 +60,11 @@ const App = () => {
                             setActionModel,
                         }}
                     >
-                        <ModelDraw statusDraw={{ setStatusDraw, statusDraw }} />
-                        {statusDraw ? <ModelScale /> : null}
+                        {/* <ModelDraw statusDraw={{ setStatusDraw, statusDraw }} /> */}
+                        {/* {statusDraw ? <ModelScale /> : null} */}
                     </ModelContext.Provider>
                 </nav>
-            </aside> */}
+            </aside>
         </div>
     );
 };
