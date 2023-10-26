@@ -4,81 +4,55 @@ import { ModelContext } from "../app/App";
 
 import * as THREE from "three";
 
+import { Sky } from "@react-three/drei";
+
 // * three
 
 export const Service = () => {
     const x = 0,
         y = 1;
     // состояние полотна и контекст
-    const [canvas, setCanvas] = useState(null);
-    const [ctx, setCanvasContext] = useState(null);
-    const saveCanvasSettings = ({ canvas, ctx }) => {
-        setCanvas(canvas);
-        setCanvasContext(ctx);
+    const [canvasContainer, setCanvasContainer] = useState(null);
+    const saveCanvasSettings = ({ canvasContainer }) => {
+        setCanvasContainer(canvasContainer);
     };
 
-    const clearCanvas = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
+    const drawModel = () => {
+        // console.dir(canvasContainer.style);
+        const width = 800,
+            height = 600;
 
-    const drawAxis = () => {
-        const center = [canvas.width / 2, canvas.height / 2, 0];
-        ctx.beginPath();
-        ctx.moveTo(center[0], center[1]);
-        ctx.lineTo(center[0], center[1] - 200);
+        // init
 
-        ctx.moveTo(center[0], center[1]);
-        ctx.lineTo(center[0] + 200, center[1]);
+        const camera = new THREE.PerspectiveCamera(
+            70,
+            width / height,
+            0.01,
+            10
+        );
+        camera.position.z = 1;
 
-        ctx.moveTo(center[0], center[1]);
-        ctx.lineTo(center[0] - 150, center[1] + 150);
-
-        ctx.closePath();
-        ctx.lineWidth = 0.1;
-        ctx.strokeStyle = "black";
-        ctx.stroke();
-    };
-
-    const drawModel = (matrix, edges) => {
         const scene = new THREE.Scene();
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
-        const material = new THREE.MeshBasicMaterial({ color: "purple" });
-        const mesh = new THREE.Mesh(geometry, material);
 
+        const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+        const material = new THREE.MeshNormalMaterial();
+
+        const mesh = new THREE.Mesh(geometry, material);
         scene.add(mesh);
 
-        const sizes = {
-            width: 600,
-            height: 600,
-        };
-        const camera = new THREE.PerspectiveCamera(
-            75,
-            sizes.width / sizes.height
-        );
-        scene.add(camera);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setAnimationLoop(animation);
+        canvasContainer.appendChild(renderer.domElement);
 
-        console.log(canvas);
-        const renderer = new THREE.WebGLRenderer({ canvas });
-        console.log(renderer);
+        // animation
 
-        // renderer.render(scene, camera);
-    };
+        function animation(time) {
+            mesh.rotation.x = time / 2000;
+            mesh.rotation.y = time / 1000;
 
-    const coordConvert = (dwarfMatrix, scale) => {
-        // масштаб
-        const scaleC = [
-            [scale, 0, 0, 0],
-            [0, scale, 0, 0],
-            [0, 0, scale, 0],
-            [0, 0, 0, 1],
-        ];
-        // центрирование
-        const convertMatrix = multiply(dwarfMatrix, scaleC);
-        for (const bodyPart of convertMatrix) {
-            bodyPart[0] += canvas.width / 2;
-            bodyPart[1] += canvas.width / 2;
+            renderer.render(scene, camera);
         }
-        return convertMatrix;
     };
 
     return {
@@ -87,40 +61,34 @@ export const Service = () => {
     };
 };
 
-export const Canvas = () => {
-    const canvasRef = useRef(null);
-    const modelContext = useContext(ModelContext);
-    const {
-        drawModel: { matrixModel, edges },
-    } = modelContext;
-    const { saveCanvasSettings, drawModel } = Service();
+export const MyCanvas = () => {
+    // const canvasContainerRef = useRef(null);
+    // const modelContext = useContext(ModelContext);
+    // const {
+    //     drawModel: { matrixModel, edges },
+    // } = modelContext;
+    // const { saveCanvasSettings, drawModel } = Service();
 
-    //! канвас сохраняется при первом рендере полотна
-    useEffect(() => {
-        saveCanvasSettings({
-            canvas: canvasRef.current,
-            ctx: canvasRef.current.getContext("2d"),
-        });
-        // eslint-disable-next-line
-    }, []);
+    // //! канвас сохраняется при первом рендере полотна
+    // useEffect(() => {
+    //     saveCanvasSettings({
+    //         canvasContainer: canvasContainerRef.current,
+    //     });
+    //     // eslint-disable-next-line
+    // }, []);
 
-    //! обновляемая модель, которая приходит из вне, затем рисуется в сервисе
-    useEffect(() => {
-        console.log(matrixModel);
-        if (matrixModel) {
-            drawModel(matrixModel, edges);
-        }
-        // eslint-disable-next-line
-    }, [matrixModel]);
+    // //! обновляемая модель, которая приходит из вне, затем рисуется в сервисе
+    // useEffect(() => {
+    //     if (matrixModel) {
+    //         drawModel();
+    //     }
+    //     // eslint-disable-next-line
+    // }, [matrixModel]);
 
     return (
         <>
-            <canvas
-                width={800}
-                height={600}
-                ref={canvasRef} //ссылка на элемент
-                className="canvas"
-            ></canvas>
+            {/* <div className="canvas-container" ref={canvasContainerRef}></div> */}
+            <Sky sunPosition={[100, 20, 100]} />
         </>
     );
 };

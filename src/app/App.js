@@ -1,6 +1,8 @@
 import { useState, createContext } from "react";
 
-import { Canvas } from "../service/graphic-service";
+import { Canvas } from "@react-three/fiber";
+
+import { MyCanvas } from "../service/graphic-service";
 import { ModelMove } from "../action/move.";
 import { ModelRotate } from "../action/rotate";
 import { ModelDraw } from "../action/draw";
@@ -25,7 +27,7 @@ const App = () => {
 
     return (
         <div className="container">
-            <aside className="buttons-panel">
+            {/* <aside className="buttons-panel">
                 <nav className="buttons-panel-navigate">
                     <ModelContext.Provider
                         value={{
@@ -41,12 +43,14 @@ const App = () => {
                         {statusDraw ? <ModelMove /> : null}
                     </ModelContext.Provider>
                 </nav>
-            </aside>
-            <ModelContext.Provider value={{ drawModel }}>
-                <Canvas />
-            </ModelContext.Provider>
+            </aside> */}
+            {/* <ModelContext.Provider value={{ drawModel }}> */}
+            <Canvas camera={{ fov: 45 }}>
+                <MyCanvas />
+            </Canvas>
+            {/* </ModelContext.Provider> */}
 
-            <aside className="buttons-panel">
+            {/* <aside className="buttons-panel">
                 <nav className="buttons-panel-navigate">
                     <ModelContext.Provider
                         value={{
@@ -62,7 +66,7 @@ const App = () => {
                         {statusDraw ? <ModelScale /> : null}
                     </ModelContext.Provider>
                 </nav>
-            </aside>
+            </aside> */}
         </div>
     );
 };

@@ -72,7 +72,7 @@ export const ModelDraw = ({ statusDraw: { statusDraw, setStatusDraw } }) => {
             >
                 Отрисовать
             </button>
-            {statusDraw ? (
+            {/* {statusDraw ? (
                 <button className="buttons-panel-button" onClick={onReset}>
                     Сбросить
                 </button>
@@ -82,7 +82,7 @@ export const ModelDraw = ({ statusDraw: { statusDraw, setStatusDraw } }) => {
                 <button className="buttons-panel-button" onClick={onProjection}>
                     Ортогональная проекция
                 </button>
-            ) : null}
+            ) : null} */}
         </>
     );
 };
