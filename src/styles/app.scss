@@ -5,15 +5,6 @@
     padding: 0;
 }
 
-body {
-    display: flex;
-    // align-items: center;
-    justify-content: center;
-    padding-top: 30px;
-    min-height: 100vh;
-    background-color: #abaaaa;
-}
-
 .container {
     min-width: 100vw;
     display: flex;
@@ -26,11 +17,33 @@ body {
 }
 
 .buttons-panel {
+    &-left {
+        width: 230px;
+        display: flex;
+        justify-content: center;
+        position: absolute;
+        right: 10px;
+    }
+    &-right {
+        width: 230px;
+        display: flex;
+        justify-content: center;
+        position: absolute;
+
+        left: 5px;
+    }
     // background-color: green;
-    width: 230px;
-    display: flex;
-    justify-content: center;
-    &-navigate {
+
+    &-navigate-left {
+        display: flex;
+        flex-direction: column;
+        background-color: transparent;
+        width: 80%;
+        height: 100%;
+    }
+    &-navigate-right {
+        right: 10px;
+        background-color: transparent;
         width: 80%;
         height: 100%;
     }
@@ -64,7 +77,7 @@ body {
 }
 
 .canvas {
-    width: 800;
+    width: 600px;
     height: 600px;
 
     background-color: #f3f3f3;
@@ -83,34 +96,10 @@ body {
 }
 
 .axisText {
+    color: white;
     text-align: center;
 }
 
 .canvas-container {
-    width: 800px;
-    height: 600px;
+    background-color: white;
 }
-
-// * {
-//     margin: 0;
-//     padding: 0;
-// }
-
-// html,
-// body,
-// #root,
-// #container {
-//     min-height: 100vh;
-// }
-
-// .aim {
-//     position: absolute;
-//     top: 50%;
-//     left: 50%;
-//     width: 10px;
-//     height: 10px;
-//     border-radius: 50%;
-//     transform: translate3d(-50%, -50%, 0);
-//     border: 2px solid white;
-//     z-index: 2;
-// }

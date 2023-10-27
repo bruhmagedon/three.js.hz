@@ -3,7 +3,7 @@ import "../../styles/range.scss";
 
 export const Range = ({ onAction, view, type }) => {
     const [scaleValue, setScaleValue] = useState("1");
-    const [rotateValue, setRotateValue] = useState("1");
+    const [rotateValue, setRotateValue] = useState("0");
 
     if (type === "scale") {
         return (
@@ -37,9 +37,9 @@ export const Range = ({ onAction, view, type }) => {
                     }}
                     className={"range " + view}
                     view={view}
-                    min="-30"
-                    max="30"
-                    step="1"
+                    min="-4"
+                    max="4"
+                    step="0.1"
                 />
             </>
         );

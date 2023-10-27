@@ -5,40 +5,7 @@ import { ArrowButton } from "../UI/arrowButton/arrowButton";
 export const Move = () => {};
 
 export const ModelMove = () => {
-    const { status, setStatus, setDrawModel, actionModel, setActionModel } =
-        useContext(ModelContext);
-
-    const onAction = (e) => {
-        const movement = e.target.name;
-        const moveMatrix = structuredClone(actionModel);
-        switch (movement) {
-            case "U":
-                for (let point of moveMatrix) {
-                    point[1] -= 1;
-                }
-                break;
-            case "L":
-                for (let point of moveMatrix) {
-                    point[0] -= 1;
-                }
-                break;
-            case "R":
-                for (let point of moveMatrix) {
-                    point[0] += 1;
-                }
-                break;
-            case "D":
-                for (let point of moveMatrix) {
-                    point[1] += 1;
-                }
-                break;
-            default:
-                return;
-        }
-        setActionModel(moveMatrix);
-        setDrawModel((model) => ({ ...model, matrixModel: moveMatrix }));
-    };
-
+    const { status, setStatus } = useContext(ModelContext);
     return (
         <>
             <button
@@ -47,15 +14,16 @@ export const ModelMove = () => {
             >
                 Переместить
             </button>
-            {status === "move" ? <ArrowButtons onAction={onAction} /> : null}
+            {/* {status === "move" ? <ArrowButtons onAction={onAction} /> : null} */}
         </>
     );
 };
 
-const ArrowButtons = ({ onAction }) => {
+const ArrowButtons = () => {
+    // const { setMove } = useContext(ModelContext);
     return (
         <>
-            <div className="up-down-button">
+            {/* <div className="up-down-button">
                 <ArrowButton name={"U"} onAction={onAction} />
             </div>
             <div className="left-right-button">
@@ -64,7 +32,7 @@ const ArrowButtons = ({ onAction }) => {
             </div>
             <div className="up-down-button">
                 <ArrowButton name={"D"} onAction={onAction} />
-            </div>
+            </div> */}
         </>
     );
 };

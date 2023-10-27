@@ -1,94 +1,82 @@
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import { useState, useRef, useEffect, useContext } from "react";
 import { ModelContext } from "../app/App";
-
-import "../styles/three.scss";
+import { useModel } from "../action/model/model";
+import { re } from "mathjs";
 
 // * three
 export const Service = () => {
+    const { light } = useContext(ModelContext);
     const [canvasContainer, setCanvasContainer] = useState(null);
+    const [rotateStatus, setRotateStatus] = useState(null);
     const saveCanvasSettings = ({ canvasContainer }) => {
         setCanvasContainer(canvasContainer);
         return true;
     };
+    const { dwarfModel } = useModel();
 
     const drawModel = () => {
+        // очистка сцены
         while (canvasContainer.lastElementChild) {
             canvasContainer.removeChild(canvasContainer.lastElementChild);
         }
 
-        const width = 600,
-            height = 600;
+        const width = window.innerWidth,
+            height = window.innerHeight;
+        // сцена
+        const scene = new THREE.Scene();
+        scene.background = "white";
+
+        console.log(light);
+        const localLight = !light
+            ? new THREE.DirectionalLight(0xffffff, 4)
+            : new THREE.PointLight(0xffffff, 4);
+        localLight.position.set(rotateStatus.x, rotateStatus.y, rotateStatus.z);
+        scene.add(localLight);
 
         // камера
         const camera = new THREE.PerspectiveCamera(75, width / height);
-        camera.position.z = 3;
+        camera.position.z = 4;
 
-        // сцена
-        const scene = new THREE.Scene();
-
+        // моделька
         const group = new THREE.Group();
-        const meshes = [];
-        const colors = [0xb7e8d8, 0xe86344, 0xe8ab9c];
-
-        for (let x = -1.2; x <= 1.2; x += 1.2) {
-            for (let y = -1.2; y <= 1.2; y += 1.2) {
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshBasicMaterial({
-                    color: colors[((Math.random() * 3) | 0) + 1],
-                    wireframe: true,
-                });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.scale.set(0.5, 0.5, 0.5);
-                mesh.position.set(x, y, 0);
-                meshes.push(mesh);
-            }
-        }
-        group.add(...meshes);
+        group.add(...dwarfModel());
         scene.add(group);
+        group.position.y -= 0.5;
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        canvasContainer.appendChild(renderer.domElement);
+        // рендерер
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+        });
+        renderer.setClearColor(new THREE.Color("#AAB7B8"));
         renderer.setSize(width, height);
+        canvasContainer.appendChild(renderer.domElement);
 
-        const clock = new THREE.Clock();
-        const animate = () => {
-            const delta = clock.getDelta();
-            meshes.forEach((item, i) => {
-                const mult = i % 2 === 0 ? "1" : "-1";
-                item.rotation.x += mult * delta;
-                item.rotation.y += mult * delta * 0.4;
-            });
-
-            const elalpsed = clock.getElapsedTime();
-            camera.position.x = Math.sin(elalpsed);
-            camera.position.y = Math.cos(elalpsed);
-            //фокус камеры на центре коориднат
-            camera.lookAt(new THREE.Vector3(0, 0, 0));
-
+        // управляемая камера
+        let controls = new OrbitControls(camera, renderer.domElement);
+        const loop = () => {
+            requestAnimationFrame(loop);
             renderer.render(scene, camera);
-            window.requestAnimationFrame(animate);
         };
-        animate();
+        loop();
     };
 
     return {
         saveCanvasSettings,
         drawModel,
+        setRotateStatus,
     };
 };
 
-export const MyCanvas = () => {
+export const Canvas = () => {
     const canvasContainerRef = useRef(null);
-    const modelContext = useContext(ModelContext);
-    const {
-        drawModel: { matrixModel, edges },
-    } = modelContext;
-    const { saveCanvasSettings, drawModel } = Service();
+    const { rotate, range, scale } = useContext(ModelContext);
+    const { saveCanvasSettings, drawModel, setRotateStatus } = Service();
     const [isAxis, setIsAxis] = useState(false);
 
-    // //! канвас сохраняется при первом рендере полотна
     useEffect(() => {
         saveCanvasSettings({
             canvasContainer: canvasContainerRef.current,
@@ -97,14 +85,15 @@ export const MyCanvas = () => {
         // eslint-disable-next-line
     }, []);
 
-    //! обновляемая модель, которая приходит из вне, затем рисуется в сервисе
     useEffect(() => {
         if (isAxis) {
             drawModel();
         }
-
-        // eslint-disable-next-line
     });
+
+    useEffect(() => {
+        setRotateStatus(rotate);
+    }, [rotate]);
 
     return (
         <>
